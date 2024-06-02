@@ -1,9 +1,10 @@
 import React from "react";
-import "../styles/home.css";
+import "../styles/navBar.css";
 
 const NavBar = (props) => {
   return (
     <nav className="navBar">
+      <h1>Type Racer</h1>
       <ul>
         <li>
           <a href="/">Home </a>

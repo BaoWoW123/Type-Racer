@@ -1,9 +1,15 @@
-.navBar {
-    background-color: gray;
-    list-style-type: none;
+.Home {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  height: 100vh;
 }
 
-.navBar > ul{
-    display: flex;
-    justify-content: space-around;
+.textExample {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: x-large;
+  flex: 1;
+  padding: 0 10rem;
 }
