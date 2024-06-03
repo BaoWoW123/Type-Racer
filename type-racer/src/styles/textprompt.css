@@ -1,0 +1,52 @@
+#textWrapper {
+    position: relative;
+    font-size: x-large;
+}
+
+#startMessage {
+    font-size: 20px;
+    text-align: center;
+    padding-bottom: 1%;
+    margin: 0;
+}
+
+#promptSilhouette {
+    color: grey;
+
+    font-size: inherit;   
+}
+
+#promptInput {
+    background-color: transparent;
+    color: transparent;
+
+    font-size: 0;
+
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    border: none;
+    resize: none;
+    padding: 0;
+    margin: 0;
+}
+
+#promptInput:focus {
+    outline: none;
+    caret-color: transparent;
+}
+
+#promptOutput {
+    background-color: transparent;
+
+    font-size: inherit;
+
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
