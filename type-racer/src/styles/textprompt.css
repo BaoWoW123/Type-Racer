@@ -1,18 +1,21 @@
+main {
+    text-align: center;
+}
+
 #textWrapper {
     position: relative;
     font-size: x-large;
+    text-align: left;
 }
 
 #startMessage {
     font-size: 20px;
-    text-align: center;
     padding-bottom: 1%;
     margin: 0;
 }
 
 #promptSilhouette {
-    color: grey;
-
+    color: rgba(128, 128, 128, 0.349);
     font-size: inherit;   
 }
 
