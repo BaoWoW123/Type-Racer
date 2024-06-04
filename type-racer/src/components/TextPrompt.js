@@ -1,77 +1,123 @@
-import React from "react"
-import "../styles/textprompt.css" 
+import { useState, useEffect } from "react"
+import "../styles/textprompt.css"
+
+//export const prompt = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmodtempor incididunt ut labore et dolore magna aliqua. In nulla posueresollicitudin aliquam ultrices sagittis. Nisi quis eleifend quamadipiscing vitae proin sagittis. A iaculis at erat pellentesqueadipiscing commodo elit at imperdiet. Amet commodo nulla facilisi nullamvehicula ipsum a arcu."
+
+//    text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmodtempor incididunt ut labore et dolore magna aliqua.",
 
 
-/*
-Need to add valid check on input for occurrences of bad keys pressed
-that do not match the prompt ...
-*/
+// Input to TextPrompt
+export const prompt = {
+    text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmodtempor incididunt ut labore et dolore magna aliqua.",
+    getWordCount: function(){ return prompt.text.split(' ').length },
+    getCharCount: function(){ return prompt.text.replace(" ", "").length }
+}
 
-export const prompt = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmodtempor incididunt ut labore et dolore magna aliqua. In nulla posueresollicitudin aliquam ultrices sagittis. Nisi quis eleifend quamadipiscing vitae proin sagittis. A iaculis at erat pellentesqueadipiscing commodo elit at imperdiet. Amet commodo nulla facilisi nullamvehicula ipsum a arcu. Et tortor at risus viverra adipiscing at.Condimentum vitae sapien pellentesque habitant. Praesent elementumfacilisis leo vel fringilla est ullamcorper eget nulla. Auctor auguemauris augue neque gravida in fermentum et. Leo vel orci porta nonpulvinar neque laoreet suspendisse interdum. Quis varius quam quisque iddiam vel quam elementum. Etiam sit amet nisl purus. Habitant morbitristique senectus et netus et malesuada fames. Eget nunc scelerisqueviverra mauris in aliquam. Sed risus pretium quam vulputate dignissimsuspendisse in est ante. Nec ullamcorper sit amet risus nullam. Quisenim lobortis scelerisque fermentum dui faucibus in ornare. Sed risuspretium quam vulputate dignissim suspendisse in."
-const wordCount = prompt.split(' ').length
-const charCount = prompt.replace(" ", "").length
+// Output from TextPrompt
+export var statistics = {
+    totalTimeElapsed: 0,
+    wordsPerMinute: 0,
+    charPerMinute: 0,
+    accuracy: 0
+}
 
-class TextPrompt extends React.Component {
-    constructor(props){
-        super(props);
-        this.state = {
-            typed: "",
-            started: false,
-            startTime: 0,
-            wrongKeyPressed: false,
-            wrongKeyCount: 0,
-            lastGoodKey: 0
-        };
+const Stats = (props) => {
+    return <p style={{ fontSize: "1rem" }}>Stats go here</p>
+}
+
+const TextPrompt = (props) => {
+    const [typed, setTyped] = useState("")
+    const [badKey, setBadKey] = useState(false)
+    const [badKeyCount, setBadKeyCount] = useState(0)
+    const [timer, setTimer] = useState({
+        started: false,
+        finished: false,
+        startTime: 0,
+        totalTimeElapsed: 0,
+        currentTimeElapsed: 0
+    })
+
+    useEffect(() => {
+        if(timer.finished){
+            statistics = {
+                totalTimeElapsed: timer.totalTimeElapsed,
+                wordsPerMinute: prompt.getWordCount()/(timer.totalTimeElapsed/60),
+                charPerMinute: prompt.getCharCount()/(timer.totalTimeElapsed/60),
+                // Not sure if this is a valid equation
+                accuracy: prompt.getCharCount()/(prompt.getCharCount() + badKeyCount)
+            }
+            console.log(statistics)
+        }
+    }, [timer.finished, timer.totalTimeElapsed, badKeyCount])
+
+    const checkInputError = (evt) => {
+        return !(evt.target.value === prompt.text.slice(0, evt.target.value.length))
     }
 
-    // Returns milliseconds
-    getTimeElapsed = () => {
-        return new Date() - this.state.startTime
+    // Returns seconds
+    const getTotalTimeElapsed = () => {
+        return (new Date() - timer.startTime)/1000
     }
 
-    handleInput = (evt) => {
-        if(!this.state.started){
-            console.log("Starting timer!")
-            this.setState({
+    const handleEvent = (evt) => {
+        if(timer.finished){
+            return
+        }
+
+        if(!timer.started){
+            setTimer({
                 started: true,
-                startTime: new Date()
+                startTime: new Date(),
+                currentTimeElapsed: 0
             })
         }
 
-        this.setState({
-            typed: evt.target.value
-        })
+        setBadKey(checkInputError(evt))
+        if(badKey){
+            evt.target.value = evt.target.value.slice(0, typed.length)   
+            setBadKeyCount(badKeyCount => badKeyCount + 1)
+        }
+        setTyped(evt.target.value)
+
+        if(evt.target.value === prompt.text){
+            setTimer({
+                finished: true,
+                totalTimeElapsed: getTotalTimeElapsed()
+            })
+        }
     }
 
-    discardEvent = (evt) => {
+    const discardEvent = (evt) => {
         evt.preventDefault()
+        return false
     }
 
-    render(){
-        return (
-            <main>
-                <p id="startMessage">Start typing ...</p>
-                <div id="textWrapper">
-                    <div id="promptOutput" style={{ color: this.state.wrongKeyPressed ? "red" : "white" }}>
-                        { this.state.typed }
-                    </div>
-                    <div id="promptSilhouette">
-                        { prompt }
-                    </div>
-                    <div id="container_promptInput">
-                        <textarea id="promptInput"
-                            type="text"
-                            autoComplete="off"
-                            onPaste={this.discardEvent}
-                            onCut={this.discardEvent}
-                            onCopy={this.discardEvent}
-                            onChange={this.handleInput}
-                        />
-                    </div>
+    return (
+        <main>
+            <p id="startMessage">Start typing</p>
+            <div id="textWrapper">
+                <div id="promptOutput" style={{ color: badKey ? "red" : "black" }}>
+                    { typed }
                 </div>
-            </main>
-        );
-    }
+                <div id="promptSilhouette">
+                    { prompt.text }
+                </div>
+                <div id="container_promptInput">
+                    <textarea id="promptInput"
+                        type="text"
+                        autoComplete="off"
+                        onPaste={discardEvent}
+                        onCut={discardEvent}
+                        onCopy={discardEvent}
+                        onChange={handleEvent}
+                        />
+                </div>
+            </div>
+            <div>
+                { timer.finished > 0 ? <Stats target={timer}/> : null }
+            </div>
+        </main>
+    )
 }
 
 export default TextPrompt;
