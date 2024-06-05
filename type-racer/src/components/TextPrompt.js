@@ -10,7 +10,7 @@ import "../styles/textprompt.css"
 export const prompt = {
     text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmodtempor incididunt ut labore et dolore magna aliqua.",
     getWordCount: function(){ return prompt.text.split(' ').length },
-    getCharCount: function(){ return prompt.text.replace(" ", "").length }
+    getCharCount: function(){ return prompt.text.replaceAll(" ", "").length }
 }
 
 // Output from TextPrompt
@@ -106,6 +106,7 @@ const TextPrompt = (props) => {
                     <textarea id="promptInput"
                         type="text"
                         autoComplete="off"
+                        spellCheck='false'
                         onPaste={discardEvent}
                         onCut={discardEvent}
                         onCopy={discardEvent}
