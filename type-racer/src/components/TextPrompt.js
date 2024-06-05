@@ -1,62 +1,65 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import "../styles/textprompt.css"
-
-//export const prompt = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmodtempor incididunt ut labore et dolore magna aliqua. In nulla posueresollicitudin aliquam ultrices sagittis. Nisi quis eleifend quamadipiscing vitae proin sagittis. A iaculis at erat pellentesqueadipiscing commodo elit at imperdiet. Amet commodo nulla facilisi nullamvehicula ipsum a arcu."
-
-//    text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmodtempor incididunt ut labore et dolore magna aliqua.",
-
 
 // Input to TextPrompt
 export const prompt = {
-    text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmodtempor incididunt ut labore et dolore magna aliqua.",
-    getWordCount: function(){ return prompt.text.split(' ').length },
-    getCharCount: function(){ return prompt.text.replaceAll(" ", "").length }
-}
-
-// Output from TextPrompt
-export var statistics = {
-    totalTimeElapsed: 0,
-    wordsPerMinute: 0,
-    charPerMinute: 0,
-    accuracy: 0
-}
-
-const Stats = (props) => {
-    return <p style={{ fontSize: "1rem" }}>Stats go here</p>
+    text: "The quick brown fox jumps over the lazy dog",
+    getWordCount: () => { return prompt.text.split(' ').length },
+    getCharCount: () => { return prompt.text.replaceAll(" ", "").length }
 }
 
 const TextPrompt = (props) => {
-    const [typed, setTyped] = useState("")
-    const [badKey, setBadKey] = useState(false)
-    const [badKeyCount, setBadKeyCount] = useState(0)
+    const [statistics, setStatistics] = useState({
+        wordsPerMinute: 0,
+        charPerMinute: 0,
+        accuracy: 0,
+    })
     const [timer, setTimer] = useState({
         started: false,
         finished: false,
         startTime: 0,
-        totalTimeElapsed: 0,
-        currentTimeElapsed: 0
+        timeElapsed: 0
     })
+    const [typed, setTyped] = useState("")
+    const [badKey, setBadKey] = useState(false)
+    const [badKeyCount, setBadKeyCount] = useState(0)
+    const [wordIndex, setWordIndex] = useState(1)
+
+
+    const getTimeElapsed = useCallback(() => {
+        return (timer.started) ? (new Date() - timer.startTime)/1000 : -1
+    }, [timer.started, timer.startTime])
 
     useEffect(() => {
         if(timer.finished){
-            statistics = {
-                totalTimeElapsed: timer.totalTimeElapsed,
-                wordsPerMinute: prompt.getWordCount()/(timer.totalTimeElapsed/60),
-                charPerMinute: prompt.getCharCount()/(timer.totalTimeElapsed/60),
+            setStatistics({
+                wordsPerMinute: prompt.getWordCount()/(timer.timeElapsed/60),
+                charPerMinute: prompt.getCharCount()/(timer.timeElapsed/60),
                 // Not sure if this is a valid equation
                 accuracy: prompt.getCharCount()/(prompt.getCharCount() + badKeyCount)
-            }
-            console.log(statistics)
+            })
         }
-    }, [timer.finished, timer.totalTimeElapsed, badKeyCount])
+        
+    }, [timer.finished, timer.timeElapsed, badKeyCount])
 
-    const checkInputError = (evt) => {
-        return !(evt.target.value === prompt.text.slice(0, evt.target.value.length))
-    }
+    useEffect(() => {
+        if(timer.started && !timer.finished){
+            const interval = setInterval(() => {
+                setTimer((prevTimer) => {
+                    return {
+                        ...prevTimer,
+                        timeElapsed: getTimeElapsed()
+                    }
+                })
+            }, 10)
 
-    // Returns seconds
-    const getTotalTimeElapsed = () => {
-        return (new Date() - timer.startTime)/1000
+            return () => clearInterval(interval)
+        }
+
+    }, [timer.started, timer.finished, getTimeElapsed])
+
+    const checkInputError = (input) => {
+        return !(input === prompt.text.slice(0, input.length))
     }
 
     const handleEvent = (evt) => {
@@ -65,24 +68,33 @@ const TextPrompt = (props) => {
         }
 
         if(!timer.started){
-            setTimer({
-                started: true,
-                startTime: new Date(),
-                currentTimeElapsed: 0
+            setTimer((prevTimer) => {
+                return {
+                    ...prevTimer,
+                    started: true,
+                    startTime: new Date(),
+                }
             })
         }
 
-        setBadKey(checkInputError(evt))
+        setBadKey(checkInputError(evt.target.value))
         if(badKey){
-            evt.target.value = evt.target.value.slice(0, typed.length)   
+            evt.target.value = evt.target.value.substring(0, typed.length)   
             setBadKeyCount(badKeyCount => badKeyCount + 1)
         }
         setTyped(evt.target.value)
+        
+        if(!badKey && evt.target.value.slice(-1)[0] === " "){
+            setWordIndex(wordIndex => wordIndex + 1)
+        }
 
         if(evt.target.value === prompt.text){
-            setTimer({
-                finished: true,
-                totalTimeElapsed: getTotalTimeElapsed()
+            setTimer((prevTimer) => {
+                return {
+                    ...prevTimer,
+                    started: true,
+                    finished: true,
+                }
             })
         }
     }
@@ -94,7 +106,10 @@ const TextPrompt = (props) => {
 
     return (
         <main>
-            <p id="startMessage">Start typing</p>
+            <div id="sessionStats">
+                <p className="leftItem_sessionStats">{ wordIndex }</p>
+                <p className="rightItem_sessionStats">{ timer.timeElapsed.toFixed(2) + "s" }</p>
+            </div>
             <div id="textWrapper">
                 <div id="promptOutput" style={{ color: badKey ? "red" : "black" }}>
                     { typed }
@@ -114,8 +129,10 @@ const TextPrompt = (props) => {
                         />
                 </div>
             </div>
-            <div>
-                { timer.finished > 0 ? <Stats target={timer}/> : null }
+            <div id="finishMessage" style={{ visibility: timer.finished ? "visible" : "hidden" }}>
+                <p className="item_finishMessage">WPM: { Math.trunc(statistics.wordsPerMinute) }</p>
+                <p className="item_finishMessage">CPM: { Math.trunc(statistics.charPerMinute) }</p>
+                <p className="item_finishMessage">ACC: { Math.trunc(statistics.accuracy * 100) }%</p>
             </div>
         </main>
     )
