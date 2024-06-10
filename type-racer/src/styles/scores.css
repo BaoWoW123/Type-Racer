@@ -1,0 +1,22 @@
+.Scores {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    height: 100%;
+    align-items: center;
+  }
+  
+
+  .Scores > ul {
+    background:linear-gradient(transparent , white 20%, white 95%, transparent) ;
+    gap: 10px;
+    height: 100%;
+    width: 90%;
+  }
+
+  .Scores > ul > li {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    text-align: center;
+    padding: 1rem 0rem;
+  }
